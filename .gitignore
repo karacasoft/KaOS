@@ -1,0 +1,7 @@
+*.o
+*.d
+*.a
+sysroot
+isodir
+kaos.iso
+.DS_Store
