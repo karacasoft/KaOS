@@ -15,10 +15,6 @@ int kmain(void)
 	printf("KaOS Operating System \n");
 	printf("Version %s\n", FULL_VERSION_NAME);
 
-	int a = 1 / 0;
-	
-	printf("%d", a);
-
 	/* Do nothing! Forever. */
 	while(1);
 	return 0;
