@@ -27,7 +27,7 @@ ENV PATH=$PREFIX/bin:$PATH
 ## Install: Binutils
 WORKDIR $HOME/src
 RUN curl -O http://ftp.gnu.org/gnu/binutils/binutils-2.28.tar.gz
-RUN tar xzvf binutils-2.28.tar.gz && rm binutils-2.28.tar.gz
+RUN tar xzf binutils-2.28.tar.gz && rm binutils-2.28.tar.gz
 RUN mkdir build-binutils
 WORKDIR build-binutils
 RUN ../binutils-2.28/configure --target=$TARGET --prefix="$PREFIX" --with-sysroot --disable-nls --disable-werror
@@ -41,7 +41,7 @@ RUN which -- $TARGET-as || echo "$TARGET-as is not in the PATH"
 
 RUN curl -s http://gcc.parentingamerica.com/releases/gcc-5.4.0/gcc-5.4.0.tar.gz > gcc-5.4.0.tar.gz
 RUN ls
-RUN tar xzvf gcc-5.4.0.tar.gz > /dev/null && rm gcc-5.4.0.tar.gz
+RUN tar xzf gcc-5.4.0.tar.gz > /dev/null && rm gcc-5.4.0.tar.gz
 RUN mkdir build-gcc
 WORKDIR build-gcc
 RUN ../gcc-5.4.0/configure --target=$TARGET --prefix="$PREFIX" --disable-nls --enable-languages=c,c++ --without-headers > /dev/null
