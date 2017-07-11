@@ -1,9 +1,15 @@
 # KaOS - An experimental and minimal operating system
 
-## To build it, simply run the following:
+## Building with Docker
+For now, the easiest way is to build the `.iso` file with Docker. After installing docker, follow the steps;
 ```bash
-./build.sh
-./iso.sh
+docker build -t kaos .
 
-qemu-system-x86_64 --drive media=cdrom,file={path_to_generated_iso}
+# Optional: do this if you want to move .iso file in the container to your local machine
+id=$(docker create image-name)
+docker cp $id:/src/KaOS/kaos.iso - > ./kaos.iso
+docker rm -v $id
+
+# To work on the container and experiment
+docker run -t -i kaos /bin/sh
 ```
