@@ -10,7 +10,6 @@ rec {
   kaos = pkgs.stdenv.mkDerivation {
     name = "kaos-1.0";
     buildDepends = [pkgs.grub pkgs.xorriso];
-    wrapped-libc = libc;
     src = pkgs.fetchgit {
       url = git://github.com/triforce930/KaOS;
       rev = "fbb89de9e2227d7666e17549b70cb3523a91fabd";
@@ -18,5 +17,6 @@ rec {
     };
 
     builder = ./build.sh;
+    inherit libc;
   };
 }

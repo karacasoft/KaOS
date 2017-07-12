@@ -1,6 +1,7 @@
 source $stdenv/setup
 
-set -e
+set -ex
+ls $libc
 SYSTEM_HEADER_PROJECTS="libc kernel"
 PROJECTS="libc kernel"
 
@@ -23,6 +24,7 @@ export INCLUDEDIR=$PREFIX/include
 export CFLAGS='-O2 -g'
 export CPPFLAGS=''
 
+mkdir $out
 export SYSROOT="$out/sysroot"
 export CC="$CC --sysroot=$SYSROOT"
 
@@ -34,9 +36,9 @@ fi
 mkdir -p "$SYSROOT"
 
 for PROJECT in $SYSTEM_HEADER_PROJECTS; do
-	(cd $PROJECT && DESTDIR="$SYSROOT" $MAKE install-headers)
+	(cd $src/$PROJECT && DESTDIR="$SYSROOT" $MAKE install-headers)
 done
 
 for PROJECT in $PROJECTS; do
-	(cd $PROJECT && DESTDIR="$SYSROOT" $MAKE install)
+	(cd $src/$PROJECT && DESTDIR="$SYSROOT" $MAKE install)
 done
