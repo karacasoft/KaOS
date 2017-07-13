@@ -2,7 +2,7 @@ let
   pkgs = import <nixpkgs> {};
 in
 rec {
-  libc = import ./libc {
+  crossCompiler = import ./crossCompiler {
     target = "i686-elf";
     prefix = ./libc/opt/cross;
     inherit pkgs;
@@ -17,6 +17,6 @@ rec {
     };
 
     builder = ./build.sh;
-    inherit libc;
+    inherit crossCompiler;
   };
 }
