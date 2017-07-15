@@ -7,4 +7,6 @@ void hook_irq_handler(int index, void *handler);
 void enable_interrupts();
 void disable_interrupts();
 
+void enable_keyboard_interrupts();
+
 #endif

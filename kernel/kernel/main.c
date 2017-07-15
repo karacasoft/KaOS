@@ -3,10 +3,15 @@
 #include <kernel/irq.h>
 #include <kernel/idt.h>
 
+#include <kernel/keyboard.h>
+
 #include <kernel/config.h>
 
 void keyboardHandler(void) {
-	printf("wowowowKeyboard\n");
+	uint8_t keyCode = read_key_code();
+	
+	printf("KeyCode: %d\n", keyCode);
+	
 }
 
 int kmain(void)

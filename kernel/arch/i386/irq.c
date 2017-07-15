@@ -66,15 +66,13 @@ inline void disable_interrupts() {
 	asm volatile("cli");
 }
 
-
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 void _irq_handler(struct regs *r)
 {
-	printf("Interrupt:  %d\n", r->int_no);
+	
 	if(r->int_no > 31 && r->int_no < 48)
 	{
 		//printf("Interrupt:  %d\n", r->int_no);
