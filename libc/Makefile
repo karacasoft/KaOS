@@ -28,6 +28,7 @@ FREEOBJS = \
 	$(ARCH_FREEOBJS) \
 	string/strlen.o \
 	string/strcpy.o \
+	string/memset.o \
 	stdio/printf.o \
 	stdio/putchar.o \
 	stdio/puts.o \
