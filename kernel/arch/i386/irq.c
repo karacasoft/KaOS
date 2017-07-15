@@ -1,12 +1,16 @@
+#include <stdio.h>
 #include <kernel/idt.h>
 #include <kernel/irq.h>
+#include <kernel/iobase.h>
 
 #include "irq_r.h"
 
-void *irq_hooks[15];
+void *irq_hooks[15] = {0};
 
 void init_irq()
 {
+	setup_pic(32, 40);
+	
 	set_interrupt_gate(32, (unsigned)_irq0, 0x10, 0x8E);
 	set_interrupt_gate(33, (unsigned)_irq1, 0x10, 0x8E);
 	set_interrupt_gate(34, (unsigned)_irq2, 0x10, 0x8E);
@@ -31,17 +35,61 @@ void hook_irq_handler(int index, void *handler)
 	irq_hooks[index] = handler;
 }
 
+void setup_pic(int offset1, int offset2) {
+	unsigned char m1, m2;
+	
+	m1 = 0x01;
+	m2 = 0xff;
+	
+	outb(PIC1_COMMAND, 0x11);
+	outb(PIC2_COMMAND, 0x11);
+	
+	outb(PIC1_DATA, offset1);
+	outb(PIC2_DATA, offset2);
+	
+	outb(PIC1_DATA, 4);
+	outb(PIC2_DATA, 2);
+	
+	outb(PIC1_DATA, 0x01);
+	outb(PIC2_DATA, 0x01);
+	
+	outb(PIC1_DATA, m1);
+	outb(PIC2_DATA, m2);
+	
+} 
+
+inline void enable_interrupts() {
+	asm volatile("sti");
+}
+
+inline void disable_interrupts() {
+	asm volatile("cli");
+}
+
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 void _irq_handler(struct regs *r)
 {
+	printf("Interrupt:  %d\n", r->int_no);
 	if(r->int_no > 31 && r->int_no < 48)
 	{
+		//printf("Interrupt:  %d\n", r->int_no);
 		void (*handle)(void);
-		handle = irq_hooks[r->int_no - 32];
-		handle();
+		if(irq_hooks[r->int_no - 32]) {
+			handle = irq_hooks[r->int_no - 32];
+			handle();
+		}
+		
+		// Send end of interrupt to PIC chips
+		if(r->int_no >= 40) {
+			// 0x20 = PIC end of interrupt command
+			outb(PIC2_COMMAND, 0x20);
+		}
+		outb(PIC1_COMMAND, 0x20);
 	}
 }
 

@@ -3,9 +3,9 @@
 .type _irq0, @function
 _irq0:
 	cli
-	pushw $0
+	pushl $0
 
-	pushw $32
+	pushl $32
 	jmp _irq_common_handler
 .size _irq0, . - _irq0
 
@@ -13,9 +13,9 @@ _irq0:
 .type _irq1, @function
 _irq1:
 	cli
-	pushw $0
+	pushl $0
 
-	pushw $33
+	pushl $33
 	jmp _irq_common_handler
 .size _irq1, . - _irq1
 
@@ -23,9 +23,9 @@ _irq1:
 .type _irq2, @function
 _irq2:
 	cli
-	pushw $0
+	pushl $0
 
-	pushw $34
+	pushl $34
 	jmp _irq_common_handler
 .size _irq2, . - _irq2
 
@@ -33,9 +33,9 @@ _irq2:
 .type _irq3, @function
 _irq3:
 	cli
-	pushw $0
+	pushl $0
 
-	pushw $35
+	pushl $35
 	jmp _irq_common_handler
 .size _irq3, . - _irq3
 
@@ -43,9 +43,9 @@ _irq3:
 .type _irq4, @function
 _irq4:
 	cli
-	pushw $0
+	pushl $0
 
-	pushw $36
+	pushl $36
 	jmp _irq_common_handler
 .size _irq4, . - _irq4
 
@@ -53,9 +53,9 @@ _irq4:
 .type _irq5, @function
 _irq5:
 	cli
-	pushw $0
+	pushl $0
 
-	pushw $37
+	pushl $37
 	jmp _irq_common_handler
 .size _irq5, . - _irq5
 
@@ -63,9 +63,9 @@ _irq5:
 .type _irq6, @function
 _irq6:
 	cli
-	pushw $0
+	pushl $0
 
-	pushw $38
+	pushl $38
 	jmp _irq_common_handler
 .size _irq6, . - _irq6
 
@@ -73,9 +73,9 @@ _irq6:
 .type _irq7, @function
 _irq7:
 	cli
-	pushw $0
+	pushl $0
 
-	pushw $39
+	pushl $39
 	jmp _irq_common_handler
 .size _irq7, . - _irq7
 
@@ -83,9 +83,9 @@ _irq7:
 .type _irq8, @function
 _irq8:
 	cli
-	pushw $0
+	pushl $0
 
-	pushw $40
+	pushl $40
 	jmp _irq_common_handler
 .size _irq8, . - _irq8
 
@@ -93,9 +93,9 @@ _irq8:
 .type _irq9, @function
 _irq9:
 	cli
-	pushw $0
+	pushl $0
 
-	pushw $41
+	pushl $41
 	jmp _irq_common_handler
 .size _irq9, . - _irq9
 
@@ -103,9 +103,9 @@ _irq9:
 .type _irq10, @function
 _irq10:
 	cli
-	pushw $0
+	pushl $0
 
-	pushw $42
+	pushl $42
 	jmp _irq_common_handler
 .size _irq10, . - _irq10
 
@@ -113,9 +113,9 @@ _irq10:
 .type _irq11, @function
 _irq11:
 	cli
-	pushw $0
+	pushl $0
 
-	pushw $43
+	pushl $43
 	jmp _irq_common_handler
 .size _irq11, . - _irq11
 
@@ -123,9 +123,9 @@ _irq11:
 .type _irq12, @function
 _irq12:
 	cli
-	pushw $0
+	pushl $0
 
-	pushw $44
+	pushl $44
 	jmp _irq_common_handler
 .size _irq12, . - _irq12
 
@@ -133,9 +133,9 @@ _irq12:
 .type _irq13, @function
 _irq13:
 	cli
-	pushw $0
+	pushl $0
 
-	pushw $45
+	pushl $45
 	jmp _irq_common_handler
 .size _irq13, . - _irq13
 
@@ -143,9 +143,9 @@ _irq13:
 .type _irq14, @function
 _irq14:
 	cli
-	pushw $0
+	pushl $0
 
-	pushw $46
+	pushl $46
 	jmp _irq_common_handler
 .size _irq14, . - _irq14
 
@@ -153,9 +153,9 @@ _irq14:
 .type _irq15, @function
 _irq15:
 	cli
-	pushw $0
+	pushl $0
 
-	pushw $47
+	pushl $47
 	jmp _irq_common_handler
 .size _irq15, . - _irq15
 
@@ -186,5 +186,5 @@ _irq_common_handler:
 	popa
 
 	addl $8, %esp
+	sti
 	iret
-

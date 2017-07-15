@@ -120,6 +120,10 @@ void init_idt()
 	set_interrupt_gate(30, (unsigned)_isr30, 0x10, 0x8E);
 	set_interrupt_gate(31, (unsigned)_isr31, 0x10, 0x8E);
 
+	
+}
+
+void lidt_all() {
 	lidt(&idt_entries, 256 * (sizeof(struct IDTDesc)) - 1);
 }
 
@@ -130,8 +134,7 @@ extern "C" {
 void _fault_handler(struct regs *r) {
 	if (r->int_no < 32) {
 		printf("%s\n", error_messages[r->int_no]);
-		printf("System Halted\n");
-		while(1); // never escape
+		printf("System (not) Halted\n");
 	}
 }
 

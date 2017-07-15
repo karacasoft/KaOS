@@ -5,6 +5,10 @@
 
 #include <kernel/config.h>
 
+void keyboardHandler(void) {
+	printf("wowowowKeyboard\n");
+}
+
 int kmain(void)
 {
 	/* Initialize tty */
@@ -12,8 +16,16 @@ int kmain(void)
 	init_idt();
 	init_irq();
 
+	hook_irq_handler(1, keyboardHandler);
+
+	lidt_all();
+	
+	enable_interrupts();
+
 	printf("KaOS Operating System \n");
 	printf("Version %s\n", FULL_VERSION_NAME);
+
+	//asm volatile("int $0x21");
 
 	/* Do nothing! Forever. */
 	while(1);
