@@ -2,6 +2,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <kernel/idt.h>
+#include <kernel/irq.h>
 
 #include "idt_r.h"
 
@@ -133,8 +134,30 @@ extern "C" {
 
 void _fault_handler(struct regs *r) {
 	if (r->int_no < 32) {
-		printf("%s\n", error_messages[r->int_no]);
-		printf("System (not) Halted\n");
+		if(r->int_no == 14) {
+			uint32_t faulting_address;
+			asm volatile("mov %%cr2, %0" : "=r"(faulting_address));
+			
+			int present = !(r->err_code & 0x01);
+			int rw = r->err_code & 0x02;
+			int us = r->err_code & 0x04;
+			int reserved = r->err_code & 0x08;
+			int id = r->err_code & 0x10;
+			
+			printf("Page Fault ( ");
+			if(present) printf("present ");
+			if(rw) printf("read-only ");
+			if(us) printf("user-mode ");
+			if(reserved) printf("reserved ");
+			printf(") at 0x%x\n", (int32_t) faulting_address);
+			
+		} else {
+			printf("%s\n", error_messages[r->int_no]);
+		}
+		
+		printf("System Halted\n");
+		disable_interrupts();
+		while(1);
 	}
 }
 

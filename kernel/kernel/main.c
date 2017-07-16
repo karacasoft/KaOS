@@ -2,6 +2,7 @@
 #include <kernel/tty.h>
 #include <kernel/irq.h>
 #include <kernel/idt.h>
+#include <kernel/paging.h>
 
 #include <kernel/keyboard.h>
 
@@ -27,8 +28,18 @@ int kmain(void)
 	
 	enable_interrupts();
 
+	initialize_paging();
 	printf("KaOS Operating System \n");
 	printf("Version %s\n", FULL_VERSION_NAME);
+
+	int a = 20;
+	printf("wow %d\n", a);
+	printf("address of a: %d\n", (uint32_t) &a);
+
+	uint32_t *ptr = (uint32_t*)0x0C000000;
+	uint32_t do_page_fault = *ptr;
+
+	printf("%d", do_page_fault);
 
 	//asm volatile("int $0x21");
 
