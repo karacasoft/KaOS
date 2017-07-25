@@ -1,4 +1,5 @@
 #include <string.h>
+#include <stdio.h>
 #include <kernel/page_frames.h>
 #include <kernel/paging.h>
 #include <kernel/kheap.h>
@@ -41,8 +42,8 @@ void free_frame(page_t *page) {
 }
 
 void initialize_paging() {
-  // We assume that the memory is 16MB
-  uint32_t mem_end_page = 0x1000000;
+  // Memory is 64MB big
+  uint32_t mem_end_page = 0x4000000;
   
   nframes = mem_end_page / 0x1000;
   frames = (uint32_t *) kmalloc(INDEX_FROM_BIT(nframes));
@@ -52,6 +53,7 @@ void initialize_paging() {
   memset(kernel_directory, 0, sizeof(page_directory_t));
   current_directory = kernel_directory;
   
+  // Identity map the first MB
   int i = 0;
   while((uint32_t) i < placement_address) {
     alloc_frame(get_page(i, 1, kernel_directory), 0, 0);
