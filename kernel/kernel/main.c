@@ -4,15 +4,15 @@
 #include <kernel/idt.h>
 #include <kernel/paging.h>
 
-#include <kernel/keyboard.h>
+#include <kernel/scancodes.h>
 
 #include <kernel/config.h>
 
 void keyboardHandler(void) {
-	uint8_t keyCode = read_key_code();
-	
-	printf("KeyCode: %d\n", keyCode);
-	
+	char key_code = get_char();
+	if(key_code != 0x00) {
+		putchar(key_code);
+	}
 }
 
 int kmain(void)
@@ -31,6 +31,10 @@ int kmain(void)
 	initialize_paging();
 	printf("KaOS Operating System \n");
 	printf("Version %s\n", FULL_VERSION_NAME);
+
+	tty_enable_cursor();
+	tty_set_auto_update_cursor(1);
+	printf("$ ");
 
 	//asm volatile("int $0x21");
 

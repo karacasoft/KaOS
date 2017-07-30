@@ -29,6 +29,7 @@ FREEOBJS = \
 	string/strlen.o \
 	string/strcpy.o \
 	string/memset.o \
+	string/memcpy.o \
 	stdio/printf.o \
 	stdio/putchar.o \
 	stdio/puts.o \

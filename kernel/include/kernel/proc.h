@@ -4,7 +4,6 @@
 #include <kernel/config.h>
 
 #define PROCESS_FLAG_IS_USER 0x01
-#define PROCESS_FLAG_
 
 typedef struct proc_info {
   uint16_t cs;

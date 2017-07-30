@@ -3,9 +3,7 @@
 
 #include <stdint.h>
 
-
-
 void enable_keyboard_interrupts();
-uint8_t read_key_code();
+uint8_t read_scan_code();
 
 #endif

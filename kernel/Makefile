@@ -28,6 +28,7 @@ KERNEL_OBJS = \
 	$(KERNEL_ARCH_OBJS) \
 	kernel/main.o \
 	kernel/kheap.o \
+	kernel/scancodes.o \
 
 OBJS = \
 	$(ARCHDIR)/crti.o \

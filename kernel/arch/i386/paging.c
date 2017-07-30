@@ -53,7 +53,6 @@ void initialize_paging() {
   memset(kernel_directory, 0, sizeof(page_directory_t));
   current_directory = kernel_directory;
   
-  // Identity map the first MB
   int i = 0;
   while((uint32_t) i < placement_address) {
     alloc_frame(get_page(i, 1, kernel_directory), 0, 0);
