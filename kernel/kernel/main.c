@@ -3,6 +3,7 @@
 #include <kernel/irq.h>
 #include <kernel/idt.h>
 #include <kernel/paging.h>
+#include <kernel/ide.h>
 
 #include <kernel/scancodes.h>
 
@@ -15,6 +16,10 @@ void keyboardHandler(void) {
 	}
 }
 
+void ide_int_test(void) {
+	printf("ide interrupt wow");
+}
+
 int kmain(void)
 {
 	/* Initialize tty */
@@ -23,6 +28,7 @@ int kmain(void)
 	init_irq();
 
 	hook_irq_handler(1, keyboardHandler);
+	hook_irq_handler(14, ide_int_test);
 
 	lidt_all();
 	
@@ -34,6 +40,9 @@ int kmain(void)
 
 	tty_enable_cursor();
 	tty_set_auto_update_cursor(1);
+	
+	//ide_initialize(0x1F0, 0x3F6, 0x170, 0x376, 0x000);
+	
 	printf("$ ");
 
 	//asm volatile("int $0x21");

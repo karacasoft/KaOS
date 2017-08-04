@@ -2,6 +2,7 @@
 #define __PROC_H__ 1
 
 #include <kernel/config.h>
+#include <stdint.h>
 
 #define PROCESS_FLAG_IS_USER 0x01
 

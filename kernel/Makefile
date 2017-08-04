@@ -29,6 +29,7 @@ KERNEL_OBJS = \
 	kernel/main.o \
 	kernel/kheap.o \
 	kernel/scancodes.o \
+	kernel/ide.o \
 
 OBJS = \
 	$(ARCHDIR)/crti.o \
