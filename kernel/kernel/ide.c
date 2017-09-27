@@ -32,18 +32,21 @@ void ide_initialize(uint32_t BAR0, uint32_t BAR1, uint32_t BAR2, uint32_t BAR3, 
       // Currently relying on the virtual machine to instantly
       // handle hardware stuff for us. On a real machine we have to
       // wait 1 ms here.
-      // sleep(1);
+      sleep(2);
       
       ide_write(i, ATA_REG_COMMAND, ATA_CMD_IDENTIFY);
-      // sleep(1);
+      sleep(2);
       
       // No device if status = 0
       if(ide_read(i, ATA_REG_COMMAND) == 0) continue;
       
       while(1) {
         status = ide_read(i, ATA_REG_STATUS);
+        //printf("ATA STATUS: %d\n", status);
+        sleep(2);
         if((status & ATA_SR_ERR)) {err = 1; break;}
         if((status & ATA_SR_BSY) && (status & ATA_SR_DRQ)) { break;}
+        if((status & ATA_SR_DRDY) && (status & ATA_SR_DSC) && (status & ATA_SR_DRQ)) { break;}
       }
       
       if(err != 0) {
@@ -58,7 +61,7 @@ void ide_initialize(uint32_t BAR0, uint32_t BAR1, uint32_t BAR2, uint32_t BAR3, 
           continue; // Unknown type
           
         ide_write(i, ATA_REG_COMMAND, ATA_CMD_IDENTIFY_PACKET);
-        //sleep(1);
+        sleep(2);
       }
       
       ide_read_buffer(i, ATA_REG_DATA, (uint32_t) ide_buf, 128);

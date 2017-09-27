@@ -38,7 +38,7 @@ void hook_irq_handler(int index, void *handler)
 void setup_pic(int offset1, int offset2) {
 	unsigned char m1, m2;
 	
-	m1 = 0x01;
+	m1 = 0x00;
 	m2 = 0xff;
 	
 	outb(PIC1_COMMAND, 0x11);
