@@ -4,8 +4,13 @@
 
 #include <kernel/ide.h>
 #include <kernel/iobase.h>
+#include <kernel/irq.h>
 
 uint8_t ide_buf[2048] = {0};
+
+void ide_irq() {
+  ide_irq_invoked = 1;
+}
 
 void ide_initialize(uint32_t BAR0, uint32_t BAR1, uint32_t BAR2, uint32_t BAR3, uint32_t BAR4) {
   
@@ -29,9 +34,6 @@ void ide_initialize(uint32_t BAR0, uint32_t BAR1, uint32_t BAR2, uint32_t BAR3, 
       ide_devices[count].reserved = 0;
       
       ide_write(i, ATA_REG_HDDEVSEL, 0xA0 | (j << 4));
-      // Currently relying on the virtual machine to instantly
-      // handle hardware stuff for us. On a real machine we have to
-      // wait 1 ms here.
       sleep(2);
       
       ide_write(i, ATA_REG_COMMAND, ATA_CMD_IDENTIFY);
@@ -42,10 +44,13 @@ void ide_initialize(uint32_t BAR0, uint32_t BAR1, uint32_t BAR2, uint32_t BAR3, 
       
       while(1) {
         status = ide_read(i, ATA_REG_STATUS);
-        //printf("ATA STATUS: %d\n", status);
         sleep(2);
+        // error status
         if((status & ATA_SR_ERR)) {err = 1; break;}
+        // normal status
         if((status & ATA_SR_BSY) && (status & ATA_SR_DRQ)) { break;}
+        
+        // This status happens to be the case for a virtualbox hard drive
         if((status & ATA_SR_DRDY) && (status & ATA_SR_DSC) && (status & ATA_SR_DRQ)) { break;}
       }
       
@@ -92,12 +97,16 @@ void ide_initialize(uint32_t BAR0, uint32_t BAR1, uint32_t BAR2, uint32_t BAR3, 
   
   for (i = 0; i < 4; i++) {
     if(ide_devices[i].reserved == 1) {
-      printf("Found %s Drive %dGB - %s\n",
+      printf("%d, Found %s Drive %dMB - %s\n",
+        i,
         (const char *[]) {"ATA", "ATAPI"}[ide_devices[i].type],
-        ide_devices[i].size / 1024 / 1024 / 2,
+        ide_devices[i].size / 1024 / 2,
         ide_devices[i].model);
     }
   }
+  
+  hook_irq_handler(14, ide_irq);
+  hook_irq_handler(15, ide_irq);
 }
 
 uint8_t ide_read(uint8_t channel, uint8_t reg) {
@@ -148,6 +157,24 @@ void ide_read_buffer(uint8_t channel, uint8_t reg, uint32_t buffer, uint32_t qua
     ide_write(channel, ATA_REG_CONTROL, channels[channel].nIEN);
 }
 
+uint8_t ide_polling(uint8_t channel, uint32_t advanced_check) {
+  sleep(2);
+  
+  while(ide_read(channel, ATA_REG_STATUS) & ATA_SR_BSY);
+  
+  if(advanced_check) {
+    uint8_t status = ide_read(channel, ATA_REG_STATUS);
+    
+    if(status & ATA_SR_ERR) return 2;
+    
+    if(status & ATA_SR_DF) return 1;
+    
+    if((status & ATA_SR_DRQ) == 0) return 3;
+  }
+  
+  return 0;
+}
+
 uint8_t ide_print_error(uint32_t drive, uint8_t err) {
   if(err == 0)
     return err;
@@ -183,7 +210,69 @@ uint8_t ide_print_error(uint32_t drive, uint8_t err) {
   return err;
 }
 
-void wait_for_interrupt(ide_int_handler_t interrupt_handler) {
-  // TODO
+void ide_atapi_read_sector(uint8_t drive, uint32_t lba, uint8_t numsects, uint32_t edi) {
+  uint32_t channel = ide_devices[drive].channel;
+  uint32_t slave_bit = ide_devices[drive].drive;
+  uint32_t bus = channels[channel].base;
+  uint32_t words = 1024;
+  uint8_t err;
+  int i;
+  
+  ide_write(channel, ATA_REG_CONTROL, channels[channel].nIEN = ide_irq_invoked = 0x0);
+  
+  atapi_packet[ 0] = ATAPI_CMD_READ;
+  atapi_packet[ 1] = 0x0;
+  atapi_packet[ 2] = (lba & 0xFF000000) >> 24;
+  atapi_packet[ 3] = (lba & 0x00FF0000) >> 16;
+  atapi_packet[ 4] = (lba & 0x0000FF00) >> 8;
+  atapi_packet[ 5] = (lba & 0x000000FF) >> 0;
+  atapi_packet[ 6] = 0x0;
+  atapi_packet[ 7] = 0x0;
+  atapi_packet[ 8] = 0x0;
+  atapi_packet[ 9] = numsects;
+  atapi_packet[10] = 0x0;
+  atapi_packet[11] = 0x0;
+  
+  ide_write(channel, ATA_REG_HDDEVSEL, slave_bit << 4);
+  
+  for(i = 0; i < 4; i++) {
+    ide_read(channel, ATA_REG_ALTSTATUS);
+  }
+  
+  ide_write(channel, ATA_REG_FEATURES, 0);
+  
+  ide_write(channel, ATA_REG_LBA1, (words * 2) & 0xFF);
+  ide_write(channel, ATA_REG_LBA2, (words * 2) >> 8);
+  
+  ide_write(channel, ATA_REG_COMMAND, ATA_CMD_PACKET);
+  
+  // Sends packet data
+  asm("rep outsw" : : "c"(6), "d"(bus), "S"(atapi_packet));
+  
+  for(i = 0; i < numsects; i++) {
+    wait_for_interrupt();
+    
+    if(err = ide_polling(channel, 1)) return err;
+    
+    // uint16_t size = (ide_read(channel, ATA_REG_LBA2) << 8) | (ide_read(channel, ATA_REG_LBA1));
+    // printf("Read size: %d\n", size);
+    
+    // asm("pushw %es");
+    // asm("mov %%ax, %%es" : : "a"(selector));
+    asm("rep insw" : : "c"(words), "d"(bus), "D"(edi));
+    // asm("popw %es");
+    edi += (words * 2);
+  }
+  
+  wait_for_interrupt();
+  while(ide_read(channel, ATA_REG_STATUS) & (ATA_SR_BSY | ATA_SR_DRQ));
+  
+  return 0;
+  
+}
+
+void wait_for_interrupt() {
+  while(!ide_irq_invoked);
+  ide_irq_invoked = 0;
 }
 

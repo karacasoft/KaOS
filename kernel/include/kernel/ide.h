@@ -122,10 +122,14 @@ extern uint8_t ide_read(uint8_t channel, uint8_t reg);
 
 extern void ide_write(uint8_t channel, uint8_t reg, uint8_t data);
 
+extern uint8_t ide_polling(uint8_t channel, uint32_t advanced_check);
+
 extern void ide_read_buffer(uint8_t channel, uint8_t reg, uint32_t buffer, uint32_t quads);
 
 extern uint8_t ide_print_error(uint32_t drive, uint8_t error);
 
-extern void wait_for_interrupt(ide_int_handler_t interrupt_handler);
+extern void ide_atapi_read_sector(uint8_t drive, uint32_t lba, uint8_t numsects, uint32_t edi);
+
+extern void wait_for_interrupt();
 
 #endif

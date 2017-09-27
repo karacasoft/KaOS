@@ -10,6 +10,7 @@
 
 #define TIMER_MODE_BCD (1 << 0)
 
+// TODO shift operation wrong?
 #define TIMER_OP_MODE_0 (0 << 1)
 #define TIMER_OP_MODE_1 (1 << 1)
 #define TIMER_OP_MODE_2 (2 << 1)

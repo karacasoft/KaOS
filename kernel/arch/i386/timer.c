@@ -5,7 +5,7 @@
 #include <stdio.h>
 
 uint32_t timer_frequency = 1000; // hz
-uint32_t countdown = 0;
+volatile uint32_t countdown = 0;
 
 void init_timer() {
   // Find freq divisor for 1000Hz

@@ -39,7 +39,7 @@ void setup_pic(int offset1, int offset2) {
 	unsigned char m1, m2;
 	
 	m1 = 0x00;
-	m2 = 0xff;
+	m2 = ~0x80;
 	
 	outb(PIC1_COMMAND, 0x11);
 	outb(PIC2_COMMAND, 0x11);
