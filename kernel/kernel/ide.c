@@ -8,8 +8,15 @@
 
 uint8_t ide_buf[2048] = {0};
 
+void ide_irq();
+uint32_t ide_atapi_device_size(int channel);
+
 void ide_irq() {
   ide_irq_invoked = 1;
+}
+
+uint32_t ide_atapi_device_size(int channel) {
+  
 }
 
 void ide_initialize(uint32_t BAR0, uint32_t BAR1, uint32_t BAR2, uint32_t BAR3, uint32_t BAR4) {
@@ -54,22 +61,28 @@ void ide_initialize(uint32_t BAR0, uint32_t BAR1, uint32_t BAR2, uint32_t BAR3, 
         if((status & ATA_SR_DRDY) && (status & ATA_SR_DSC) && (status & ATA_SR_DRQ)) { break;}
       }
       
-      if(err != 0) {
-        uint8_t cl = ide_read(i, ATA_REG_LBA1);
-        uint8_t ch = ide_read(i, ATA_REG_LBA2);
-        
-        if(cl == 0x14 && ch == 0xEB)
-          type = IDE_ATAPI;
-        else if(cl == 0x69 && ch == 0x96)
-          type = IDE_ATAPI;
-        else
-          continue; // Unknown type
-          
+      uint8_t cl = ide_read(i, ATA_REG_LBA1);
+      uint8_t ch = ide_read(i, ATA_REG_LBA2);
+      
+      if(cl == 0x14 && ch == 0xEB)
+        type = IDE_ATAPI;
+      else if(cl == 0x69 && ch == 0x96)
+        type = IDE_ATAPI;
+      else if(cl == 0x00 && ch == 0x00)
+        type = IDE_PATA;
+      else if(cl == 0x3C && ch == 0x3C)
+        type = IDE_SATA;
+      else
+        type = IDE_UNKNOWN_TYPE; // Unknown type
+      
+      if(err != 0 && type == IDE_ATAPI) {
         ide_write(i, ATA_REG_COMMAND, ATA_CMD_IDENTIFY_PACKET);
         sleep(2);
       }
       
       ide_read_buffer(i, ATA_REG_DATA, (uint32_t) ide_buf, 128);
+      
+      //*((uint32_t *) (ide_buf + ATA_IDENT_CAPABILITIES))
       
       ide_devices[count].reserved = 1;
       ide_devices[count].type = type;
@@ -99,7 +112,7 @@ void ide_initialize(uint32_t BAR0, uint32_t BAR1, uint32_t BAR2, uint32_t BAR3, 
     if(ide_devices[i].reserved == 1) {
       printf("%d, Found %s Drive %dMB - %s\n",
         i,
-        (const char *[]) {"ATA", "ATAPI"}[ide_devices[i].type],
+        (const char *[]) {"ATA", "ATAPI", "PATA", "SATA", "Unknown"}[ide_devices[i].type],
         ide_devices[i].size / 1024 / 2,
         ide_devices[i].model);
     }

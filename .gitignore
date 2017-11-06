@@ -5,3 +5,4 @@ sysroot
 isodir
 kaos.iso
 .DS_Store
+*.kernel
