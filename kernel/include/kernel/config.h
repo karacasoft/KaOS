@@ -7,6 +7,6 @@
 #define PATCH_CODE 0x03
 
 #define VERSION_NAME "Vengeance"
-#define FULL_VERSION_NAME "v0.0.3 Vengeance"
+#define FULL_VERSION_NAME NAME " v0.0.3 " VERSION_NAME
 
 #endif

@@ -2,10 +2,10 @@
 #include <stdint.h>
 #include <string.h>
 #include <kernel/tty.h>
-#include <kernel/iobase.h>
 #include <stdio.h>
 
 #include "vga.h"
+#include "iobase.h"
 
 #define VGA_FLAG_CURSOR_VISIBLE (1 << 0)
 #define VGA_FLAG_AUTO_UPDATE_CURSOR (1 << 1)

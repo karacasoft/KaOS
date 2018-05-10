@@ -2,7 +2,9 @@ SYSTEM_HEADER_PROJECTS="libc kernel"
 PROJECTS="libc kernel"
 
 #Append cross compiler binary path to PATH variable
-export PATH=$PATH:~/opt/cross/bin
+export CROSS_COMP_BASE=~/opt/cross
+export CROSS_CC_PATH=$CROSS_COMP_BASE/bin
+export PATH=$PATH:$CROSS_CC_PATH
 
 export MAKE=${MAKE:-make}
 export HOST=${HOST:-$(./default-host.sh)}

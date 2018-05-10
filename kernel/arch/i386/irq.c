@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <kernel/idt.h>
 #include <kernel/irq.h>
-#include <kernel/iobase.h>
+#include "iobase.h"
 
 #include "irq_r.h"
 

@@ -6,3 +6,4 @@ isodir
 kaos.iso
 .DS_Store
 *.kernel
+kaos.img

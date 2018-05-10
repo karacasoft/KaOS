@@ -23,7 +23,7 @@
 #define ATA_ER_TK0NF 0x02 // Track 0 Not Found
 #define ATA_ER_AMNF  0x01 // No address mark
 
-// ATA Commands 
+// ATA Commands
 #define ATA_CMD_READ_PIO        0x20
 #define ATA_CMD_READ_PIO_EXT    0x24
 #define ATA_CMD_READ_DMA        0xC8
@@ -103,12 +103,6 @@ struct IDEChannelRegisters {
   uint16_t nIEN;  // No interrupt
 } channels[2];
 
-extern uint8_t ide_buf[2048];
-static uint8_t ide_irq_invoked = 0;
-static uint8_t atapi_packet[12] = 
-  {0xA8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-
-
 struct ide_device {
   uint8_t reserved;
   uint8_t channel;
@@ -121,20 +115,21 @@ struct ide_device {
   char model[41];
 } ide_devices[4];
 
-extern void ide_initialize(uint32_t BAR0, uint32_t BAR1, uint32_t BAR2, uint32_t BAR3, uint32_t BAR4);
+void ide_initialize(uint32_t BAR0, uint32_t BAR1, uint32_t BAR2, uint32_t BAR3, uint32_t BAR4);
 
-extern uint8_t ide_read(uint8_t channel, uint8_t reg);
+uint8_t ide_read(uint8_t channel, uint8_t reg);
 
-extern void ide_write(uint8_t channel, uint8_t reg, uint8_t data);
+void ide_write(uint8_t channel, uint8_t reg, uint8_t data);
 
-extern uint8_t ide_polling(uint8_t channel, uint32_t advanced_check);
+uint8_t ide_polling(uint8_t channel, uint32_t advanced_check);
 
-extern void ide_read_buffer(uint8_t channel, uint8_t reg, uint32_t buffer, uint32_t quads);
+void ide_read_buffer(uint8_t channel, uint8_t reg, uint32_t buffer, uint32_t quads);
 
-extern uint8_t ide_print_error(uint32_t drive, uint8_t error);
+uint8_t ide_print_error(uint32_t drive, uint8_t error);
 
-extern void ide_atapi_read_sector(uint8_t drive, uint32_t lba, uint8_t numsects, uint32_t edi);
+void ide_atapi_read_sector(uint8_t drive, uint32_t lba, uint8_t numsects, uint32_t edi);
+void ide_atapi_write_sector(uint8_t drive, uint32_t lba, uint8_t numsects, uint32_t esi);
 
-extern void wait_for_interrupt();
+void wait_for_interrupt();
 
 #endif

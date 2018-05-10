@@ -1,6 +1,6 @@
 #include <stdint.h>
 #include <stddef.h>
-#include <kernel/iobase.h>
+#include "iobase.h"
 
 void outb(uint16_t addr, uint8_t val)
 {
@@ -39,8 +39,13 @@ uint32_t inl(uint16_t addr)
 }
 
 void insl(uint16_t addr, uint32_t *buffer, size_t len) {
-	for (size_t i = 0; i < len; i++) {
-		*buffer++ = inl(addr);
-	}
+	asm volatile ( "mov %0, %%edi\n\t"
+								 "mov %1, %%edx\n\t"
+								 "mov %2, %%ecx\n\t"
+								 "rep insl\n\t"
+							 : 
+							 : "g"(buffer), "g"(addr), "g"(len)
+							 : "%edi", "%edx", "%ecx", "memory"
+							 );
 }
 

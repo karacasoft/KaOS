@@ -11,4 +11,4 @@ menuentry "KaOSVengeance" {
 	multiboot /boot/kaos.kernel
 }
 EOF
-grub-mkrescue -o kaos.iso isodir
+grub-mkrescue -o kaos.iso isodir -d $CROSS_COMP_BASE/lib/grub/i386-pc
