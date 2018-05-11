@@ -31,6 +31,7 @@ KERNEL_OBJS = \
 	kernel/scancodes.o \
 	kernel/fs/fs.o \
 	kernel/fs/kaos_fs.o \
+	kernel/media/ide_drive_media.o \
 
 OBJS = \
 	$(ARCHDIR)/crti.o \

@@ -288,6 +288,14 @@ void ide_atapi_read_sector(uint8_t drive, uint32_t lba, uint8_t numsects, uint32
 
 }
 
+void ide_ata_read_sector(uint8_t drive, uint32_t lba, uint8_t numsects, uint32_t edi) {
+
+}
+
+void ide_ata_write_sector(uint8_t drive, uint32_t lba, uint8_t numsects, uint32_t esi) {
+  
+}
+
 void ide_atapi_write_sector(uint8_t drive, uint32_t lba, uint8_t numsects, uint32_t esi) {
   
 }

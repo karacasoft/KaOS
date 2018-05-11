@@ -2,13 +2,15 @@
 #include <kernel/tty.h>
 #include <kernel/irq.h>
 #include <kernel/idt.h>
+#include <media/ide_drive/ide_drive_media.h>
 #include <kernel/paging.h>
-#include <kernel/ide.h>
 #include <kernel/timer.h>
 
 #include <kernel/scancodes.h>
 
 #include <kernel/config.h>
+
+void scanHardwareChanges();
 
 unsigned char buffer[2048] = {0};
 
@@ -19,9 +21,14 @@ void keyboardHandler(void) {
 	}
 }
 
+void scanHardwareChanges() {
+	printf("Searching for IDE drives...\n");
+	media_ide_scan_ide_drives();
+
+}
+
 int kmain(void)
 {
-	/* Initialize tty */
 	tty_init();
 	init_idt();
 	init_irq();
@@ -40,8 +47,7 @@ int kmain(void)
 	tty_enable_cursor();
 	tty_set_auto_update_cursor(1);
 
-	printf("Searching for IDE drives...\n");
-	ide_initialize(0x1F0, 0x3F6, 0x170, 0x376, 0x000);
+	scanHardwareChanges();
 
 	// Reads disk drive 1
 	//ide_atapi_read_sector(1, 0, 1, (uint32_t)buffer);

@@ -130,6 +130,9 @@ uint8_t ide_print_error(uint32_t drive, uint8_t error);
 void ide_atapi_read_sector(uint8_t drive, uint32_t lba, uint8_t numsects, uint32_t edi);
 void ide_atapi_write_sector(uint8_t drive, uint32_t lba, uint8_t numsects, uint32_t esi);
 
+void ide_ata_read_sector(uint8_t drive, uint32_t lba, uint8_t numsects, uint32_t edi);
+void ide_ata_write_sector(uint8_t drive, uint32_t lba, uint8_t numsects, uint32_t esi);
+
 void wait_for_interrupt();
 
 #endif
