@@ -18,9 +18,10 @@ void alloc_frame(page_t *page, int is_kernel, int is_writable) {
   }
   else
   {
-    uint32_t idx = first_free_frame();
-    if(idx == (uint32_t) -1) {
+    int32_t idx = first_free_frame();
+    if(idx == -1) {
       // No free frames lol
+      printf("No free frames for new pages\n");
       while(1);
     }
     set_frame(idx * 0x1000);

@@ -8,6 +8,7 @@ typedef int16_t KAOS_ERR;
 #define KAOS_ERR_NO_ERROR              0
 #define KAOS_ERR_DIVISION_BY_ZERO      1
 #define KAOS_ERR_OVERFLOW              2
+#define KAOS_ERR_NO_FS_DETECTED        3
 
 
 

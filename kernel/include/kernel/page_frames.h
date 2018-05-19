@@ -30,7 +30,7 @@ static uint32_t test_frame(uint32_t frame_addr) {
   return (frames[idx] & (0x1 << off));
 }
 
-static uint32_t first_free_frame() {
+static int32_t first_free_frame() {
   uint32_t i, j;
   for (i = 0; i < INDEX_FROM_BIT(nframes); i++) {
     if(frames[i] != 0xFFFFFFFF)

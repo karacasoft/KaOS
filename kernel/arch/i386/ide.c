@@ -20,12 +20,13 @@ void ide_irq() {
 }
 
 uint32_t ide_atapi_device_size(int channel) {
-
+  return 0;
 }
 
 void ide_initialize(uint32_t BAR0, uint32_t BAR1, uint32_t BAR2, uint32_t BAR3, uint32_t BAR4) {
 
   int i, j, k, count = 0;
+  ide_device_ident_t *device_ident;
 
   // set I/O ports
   channels[ATA_PRIMARY].base    = (BAR0 & 0xFFFFFFFC) + 0x1F0 * (!BAR0);
@@ -86,15 +87,18 @@ void ide_initialize(uint32_t BAR0, uint32_t BAR1, uint32_t BAR2, uint32_t BAR3, 
 
       ide_read_buffer(i, ATA_REG_DATA, (uint32_t) ide_buf, 128);
 
+      device_ident = (ide_device_ident_t *) ide_buf;
+
       //*((uint32_t *) (ide_buf + ATA_IDENT_CAPABILITIES))
 
       ide_devices[count].reserved = 1;
       ide_devices[count].type = type;
       ide_devices[count].channel = i;
       ide_devices[count].drive = j;
-      ide_devices[count].signature = *((uint16_t *) (ide_buf + ATA_IDENT_DEVICETYPE));
-      ide_devices[count].capabilities = *((uint16_t *) (ide_buf + ATA_IDENT_CAPABILITIES));
+      ide_devices[count].signature = device_ident->flags;
+      ide_devices[count].capabilities = device_ident->lba_dma_support;
       ide_devices[count].command_sets = *((uint32_t *) (ide_buf + ATA_IDENT_COMMANDSETS));
+      ide_devices[count].bytes_per_sector = device_ident->nr_bytes_per_sector;
 
       if(ide_devices[count].command_sets & (1 << 26)) {
         ide_devices[count].size = *((uint32_t *) (ide_buf + ATA_IDENT_MAX_LBA_EXT));
@@ -108,7 +112,7 @@ void ide_initialize(uint32_t BAR0, uint32_t BAR1, uint32_t BAR2, uint32_t BAR3, 
       }
       ide_devices[count].model[40] = 0;
 
-      count ++;
+      count++;
     }
   }
 
@@ -117,7 +121,7 @@ void ide_initialize(uint32_t BAR0, uint32_t BAR1, uint32_t BAR2, uint32_t BAR3, 
       printf("%d, Found %s Drive %dMB - %s\n",
         i,
         (const char *[]) {"ATA", "ATAPI", "PATA", "SATA", "Unknown"}[ide_devices[i].type],
-        ide_devices[i].size / 1024 / 2,
+        ide_devices[i].size / 512,
         ide_devices[i].model);
     }
   }
@@ -227,7 +231,7 @@ uint8_t ide_print_error(uint32_t drive, uint8_t err) {
   return err;
 }
 
-void ide_atapi_read_sector(uint8_t drive, uint32_t lba, uint8_t numsects, uint32_t edi) {
+uint8_t ide_atapi_read_sector(uint8_t drive, uint32_t lba, uint8_t numsects, uint32_t edi) {
   uint32_t channel = ide_devices[drive].channel;
   uint32_t slave_bit = ide_devices[drive].drive;
   uint32_t bus = channels[channel].base;
@@ -276,7 +280,7 @@ void ide_atapi_read_sector(uint8_t drive, uint32_t lba, uint8_t numsects, uint32
 
     // asm("pushw %es");
     // asm("mov %%ax, %%es" : : "a"(selector));
-    asm("rep insw" : : "c"(words), "d"(bus), "D"(edi));
+    asm("rep insw" : : "c"(words), "d"(bus), "D"(edi) : "memory");
     // asm("popw %es");
     edi += (words * 2);
   }
@@ -285,19 +289,111 @@ void ide_atapi_read_sector(uint8_t drive, uint32_t lba, uint8_t numsects, uint32
   while(ide_read(channel, ATA_REG_STATUS) & (ATA_SR_BSY | ATA_SR_DRQ));
 
   return 0;
-
 }
 
-void ide_ata_read_sector(uint8_t drive, uint32_t lba, uint8_t numsects, uint32_t edi) {
+uint8_t ide_ata_read_sector(uint8_t drive, uint32_t lba, uint8_t numsects, uint32_t edi) {
+  int i;
+  uint8_t err;
+  uint8_t channel = ide_devices[drive].channel;
+  uint8_t slave_bit = ide_devices[drive].drive;
+  uint32_t bus = channels[channel].base;
+  uint32_t words = ide_devices[drive].bytes_per_sector / 2;
 
+  if(!(ide_devices[drive].capabilities & ATA_LBA_SUPPORTED)) {
+    printf("LBA addressing not supported by device\n");
+    return;
+  }
+
+  ide_write(channel, ATA_REG_CONTROL, channels[channel].nIEN = (ide_irq_invoked = 0x0) + 0x2);
+
+  ide_write(channel, ATA_REG_HDDEVSEL, 0xE0 | (slave_bit << 4));
+
+  for(i = 0; i < 4; i++) {
+    ide_read(channel, ATA_REG_ALTSTATUS);
+  }
+
+  ide_write(channel, ATA_REG_FEATURES, 0);
+
+  ide_write(channel, ATA_REG_SECCOUNT1, 0);
+  ide_write(channel, ATA_REG_SECCOUNT0, numsects);
+
+  ide_write(channel, ATA_REG_LBA0, (lba & 0xFF000000) >> 24);
+  ide_write(channel, ATA_REG_LBA1, (lba & 0x00FF0000) >> 16);
+  ide_write(channel, ATA_REG_LBA2, (lba & 0x0000FF00) >> 8);
+  ide_write(channel, ATA_REG_LBA3, (lba & 0x000000FF) >> 0);
+  ide_write(channel, ATA_REG_LBA4, 0);
+  ide_write(channel, ATA_REG_LBA5, 0);
+
+  ide_write(channel, ATA_REG_COMMAND, ATA_CMD_READ_PIO);
+
+  for(i = 0; i < numsects; i++) {
+    if(err = ide_polling(channel, 1)) {
+      ide_print_error(drive, err);
+      return err;
+    }
+
+    asm("rep insw" : : "c"(words), "d"(bus), "D"(edi) : "memory");
+
+    edi += (words * 2);
+  }
+
+  while(ide_read(channel, ATA_REG_STATUS) & (ATA_SR_BSY | ATA_SR_DRQ));
+
+  return 0;
 }
 
-void ide_ata_write_sector(uint8_t drive, uint32_t lba, uint8_t numsects, uint32_t esi) {
-  
+uint8_t ide_ata_write_sector(uint8_t drive, uint32_t lba, uint8_t numsects, uint32_t esi) {
+  int i;
+  uint8_t err;
+  uint8_t channel = ide_devices[drive].channel;
+  uint8_t slave_bit = ide_devices[drive].drive;
+  uint32_t bus = channels[channel].base;
+  uint32_t words = ide_devices[drive].bytes_per_sector / 2;
+
+  if(!(ide_devices[drive].capabilities & ATA_LBA_SUPPORTED)) {
+    printf("LBA addressing not supported by device\n");
+    return;
+  }
+
+  ide_write(channel, ATA_REG_CONTROL, channels[channel].nIEN = (ide_irq_invoked = 0x0) + 0x2);
+
+  ide_write(channel, ATA_REG_HDDEVSEL, 0xE0 | (slave_bit << 4));
+
+  for(i = 0; i < 4; i++) {
+    ide_read(channel, ATA_REG_ALTSTATUS);
+  }
+
+  ide_write(channel, ATA_REG_FEATURES, 0);
+
+  ide_write(channel, ATA_REG_SECCOUNT1, 0);
+  ide_write(channel, ATA_REG_SECCOUNT0, numsects);
+
+  ide_write(channel, ATA_REG_LBA0, (lba & 0xFF000000) >> 24);
+  ide_write(channel, ATA_REG_LBA1, (lba & 0x00FF0000) >> 16);
+  ide_write(channel, ATA_REG_LBA2, (lba & 0x0000FF00) >> 8);
+  ide_write(channel, ATA_REG_LBA3, (lba & 0x000000FF) >> 0);
+  ide_write(channel, ATA_REG_LBA4, 0);
+  ide_write(channel, ATA_REG_LBA5, 0);
+
+  ide_write(channel, ATA_REG_COMMAND, ATA_CMD_WRITE_PIO);
+
+  for(i = 0; i < numsects; i++) {
+    if(err = ide_polling(channel, 1)) {
+      ide_print_error(drive, err);
+      return err;
+    }
+
+    asm("rep outsw" : : "c"(words), "d"(bus), "S"(esi));
+    esi += (words * 2);
+  }
+
+  while(ide_read(channel, ATA_REG_STATUS) & (ATA_SR_BSY | ATA_SR_DRQ));
+
+  return 0;
 }
 
-void ide_atapi_write_sector(uint8_t drive, uint32_t lba, uint8_t numsects, uint32_t esi) {
-  
+uint8_t ide_atapi_write_sector(uint8_t drive, uint32_t lba, uint8_t numsects, uint32_t esi) {
+  return 0;
 }
 
 void wait_for_interrupt() {

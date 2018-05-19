@@ -88,7 +88,7 @@ int printf(const char * restrict format, ...)
 			written += len;
 		} else if(*format == 'x') {
 			format++;
-			int d = va_arg(params, int);
+			unsigned int d = va_arg(params, unsigned int);
 			if(!maxrem) {
 				return -1;
 			}

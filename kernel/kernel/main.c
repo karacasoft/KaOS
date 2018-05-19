@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <fs/fs.h>
+#include <fs/kaos/kaos_fs.h>
 #include <kernel/tty.h>
 #include <kernel/irq.h>
 #include <kernel/idt.h>
@@ -14,6 +16,12 @@ void scanHardwareChanges();
 
 unsigned char buffer[2048] = {0};
 
+const char my_write_buffer[512] = "test buffer karacasoft deneme lol";
+
+media_device_t *main_media_device;
+
+extern fs_def_t kaos_fs_def;
+
 void keyboardHandler(void) {
 	char key_code = get_char();
 	if(key_code != 0x00) {
@@ -24,7 +32,14 @@ void keyboardHandler(void) {
 void scanHardwareChanges() {
 	printf("Searching for IDE drives...\n");
 	media_ide_scan_ide_drives();
-
+	int i;
+	for(i = 0; i < 4; i++) {
+		media_device_t *device = media_ide_get_device(i);
+		if(device != 0) {
+			main_media_device = device;
+			break;
+		}
+	}
 }
 
 int kmain(void)
@@ -49,17 +64,13 @@ int kmain(void)
 
 	scanHardwareChanges();
 
-	// Reads disk drive 1
-	//ide_atapi_read_sector(1, 0, 1, (uint32_t)buffer);
+	kaos_fs_init();
+	register_file_system(kaos_fs_def);
 
-	// printf("Read complete!\n");
-	// int i, j;
-	// for(j = 0; j < 16; j++) {
-	// 	for(i = 0; i < 16; i++) {
-	// 		printf("%x ", buffer[j * 16 + i]);
-	// 	}
-	// 	printf("\n");
-	// }
+	if(main_media_device) {
+		fs_handle_t handle;
+		initialize_file_system(main_media_device, 1, &handle);
+	}
 
 	printf("$ ");
 

@@ -20,20 +20,21 @@ typedef struct __file_struct {
 
 typedef struct __filesystem_def {
   char *name;
-  BOOL (*guess)(media_device_t device);
-  file_t (*get_file)(const char *file_name, media_device_t device);
-  KAOS_ERR (*read_file)(const file_t fd, uint8_t *in_data, uint32_t offset, uint32_t length, media_device_t device);
-  KAOS_ERR (*write_file)(const file_t fd, uint32_t *out_data, uint32_t offset, uint32_t length, media_device_t device);
+  BOOL (*guess)(media_device_t *device);
+  file_t (*get_file)(const char *file_name, media_device_t *device);
+  KAOS_ERR (*read_file)(const file_t fd, uint8_t *in_data, uint32_t offset, uint32_t length, media_device_t *device);
+  KAOS_ERR (*write_file)(const file_t fd, uint32_t *out_data, uint32_t offset, uint32_t length, media_device_t *device);
 } fs_def_t;
 
 typedef struct __filesystem_handle {
   char *name;
-  media_device_t device;
-  fs_def_t def;
+  media_device_t *device;
+  fs_def_t *def;
 } fs_handle_t;
 
-fs_handle_t guess_file_system(media_device_t device);
+KAOS_ERR guess_file_system(media_device_t *device, fs_handle_t *out_fs_handle);
 KAOS_ERR register_file_system(fs_def_t def);
+KAOS_ERR initialize_file_system(media_device_t *device, BOOL format, fs_handle_t *out_fs_handle);
 
 
 #endif

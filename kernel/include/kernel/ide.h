@@ -112,8 +112,60 @@ struct ide_device {
   uint16_t capabilities;
   uint32_t command_sets;
   uint32_t size;
+  uint16_t bytes_per_sector;
   char model[41];
 } ide_devices[4];
+
+#define ATA_LBA_SUPPORTED (1 << 9)
+#define ATA_DMA_SUPPORTED (1 << 8)
+
+#define ATA_DRIVE_FLAG_FORMAT_SPEED_GAP_REQUIRED (1 << 14)
+#define ATA_DRIVE_FLAG_TRACK_OFFSET_AVAILABLE (1 << 13)
+#define ATA_DRIVE_FLAG_DATA_STROBE_AVAILABLE (1 << 12)
+#define ATA_DRIVE_FLAG_REMOVABLE_CARTRIDGE (1 << 7)
+#define ATA_DRIVE_FLAG_FIXED_DRIVE (1 << 6)
+#define ATA_DRIVE_FLAG_NOT_MFM_ENCODED (1 << 3)
+#define ATA_DRIVE_FLAG_SOFT_SECTORED (1 << 2)
+#define ATA_DRIVE_FLAG_HARD_SECTORED (1 << 1)
+
+
+typedef struct __ide_device_identifier {
+  uint16_t flags;
+  uint16_t nr_cylinders;
+  uint16_t reserved0;
+  uint16_t nr_heads;
+  uint16_t nr_bytes_per_track;
+  uint16_t nr_bytes_per_sector;
+  uint16_t nr_sectors_per_track;
+  uint16_t reserved1[3];
+  uint8_t serial_number[20]; //ASCII - Right justified - padded with spaces(20h)
+  uint16_t buffer_type; // 0000 = unspecified
+  uint16_t buffer_size; // in 512 byte increments
+  uint16_t nr_ECC_bytes;
+  uint8_t firmware_version[8]; // ASCII - Left justified - padded with spaces(20h)
+  uint8_t model_number[40]; // ASCII - Left justified - padded with spaces(20h)
+  uint16_t reserved2;
+  uint16_t can_perform_dword_io;
+  uint16_t lba_dma_support;
+  uint16_t reserved3;
+  uint8_t pio_data_transfer_cycle_timing_mode;
+  uint8_t reserved4;
+  uint8_t dma_data_transfer_cycle_timing_mode;
+  uint8_t reserved5;
+  uint16_t size_parameters_valid; // A value of 1 makes the next 5 words (54-58) valid
+  uint16_t nr_current_cylinders;
+  uint16_t nr_current_heads;
+  uint16_t nr_current_sectors_per_track;
+  uint32_t current_capacity_in_sectors;
+  uint8_t multiple_sector;
+  uint8_t nr_sectors_transferred_during_rw_multiple;
+  uint32_t nr_lba;
+  uint8_t single_word_dma_active;
+  uint8_t supported_single_word_dma_modes;
+  uint8_t multiword_dma_active;
+  uint8_t supported_multiword_dma_modes;
+  // rest is reserved,
+} ide_device_ident_t;
 
 void ide_initialize(uint32_t BAR0, uint32_t BAR1, uint32_t BAR2, uint32_t BAR3, uint32_t BAR4);
 
@@ -127,11 +179,11 @@ void ide_read_buffer(uint8_t channel, uint8_t reg, uint32_t buffer, uint32_t qua
 
 uint8_t ide_print_error(uint32_t drive, uint8_t error);
 
-void ide_atapi_read_sector(uint8_t drive, uint32_t lba, uint8_t numsects, uint32_t edi);
-void ide_atapi_write_sector(uint8_t drive, uint32_t lba, uint8_t numsects, uint32_t esi);
+uint8_t ide_atapi_read_sector(uint8_t drive, uint32_t lba, uint8_t numsects, uint32_t edi);
+uint8_t ide_atapi_write_sector(uint8_t drive, uint32_t lba, uint8_t numsects, uint32_t esi);
 
-void ide_ata_read_sector(uint8_t drive, uint32_t lba, uint8_t numsects, uint32_t edi);
-void ide_ata_write_sector(uint8_t drive, uint32_t lba, uint8_t numsects, uint32_t esi);
+uint8_t ide_ata_read_sector(uint8_t drive, uint32_t lba, uint8_t numsects, uint32_t edi);
+uint8_t ide_ata_write_sector(uint8_t drive, uint32_t lba, uint8_t numsects, uint32_t esi);
 
 void wait_for_interrupt();
 
