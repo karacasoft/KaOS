@@ -101,9 +101,9 @@ void ide_initialize(uint32_t BAR0, uint32_t BAR1, uint32_t BAR2, uint32_t BAR3, 
       ide_devices[count].bytes_per_sector = device_ident->nr_bytes_per_sector;
 
       if(ide_devices[count].command_sets & (1 << 26)) {
-        ide_devices[count].size = *((uint32_t *) (ide_buf + ATA_IDENT_MAX_LBA_EXT));
+        ide_devices[count].size = *((uint64_t *) (ide_buf + ATA_IDENT_MAX_LBA_EXT));
       } else {
-        ide_devices[count].size = *((uint32_t *) (ide_buf + ATA_IDENT_MAX_LBA));
+        ide_devices[count].size = device_ident->nr_lba;
       }
 
       for (k = 0; k < 40; k+=2) {
@@ -121,7 +121,7 @@ void ide_initialize(uint32_t BAR0, uint32_t BAR1, uint32_t BAR2, uint32_t BAR3, 
       printf("%d, Found %s Drive %dMB - %s\n",
         i,
         (const char *[]) {"ATA", "ATAPI", "PATA", "SATA", "Unknown"}[ide_devices[i].type],
-        ide_devices[i].size / 512,
+        ide_devices[i].size / 2 / 1024,
         ide_devices[i].model);
     }
   }
@@ -393,6 +393,21 @@ uint8_t ide_ata_write_sector(uint8_t drive, uint32_t lba, uint8_t numsects, uint
 }
 
 uint8_t ide_atapi_write_sector(uint8_t drive, uint32_t lba, uint8_t numsects, uint32_t esi) {
+  return 0;
+}
+
+uint8_t ide_ata_flush_cache(uint8_t drive) {
+  int i;
+  uint8_t err;
+  uint8_t channel = ide_devices[drive].channel;
+  uint8_t slave_bit = ide_devices[drive].drive;
+  uint32_t bus = channels[channel].base;
+
+  ide_write(channel, ATA_REG_HDDEVSEL, 0xE0 | (slave_bit << 4));
+  ide_write(channel, ATA_REG_COMMAND, 0xE7);
+
+  ide_polling(channel, 0);
+
   return 0;
 }
 

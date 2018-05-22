@@ -111,7 +111,7 @@ struct ide_device {
   uint16_t signature;
   uint16_t capabilities;
   uint32_t command_sets;
-  uint32_t size;
+  uint64_t size;
   uint16_t bytes_per_sector;
   char model[41];
 } ide_devices[4];
@@ -164,7 +164,30 @@ typedef struct __ide_device_identifier {
   uint8_t supported_single_word_dma_modes;
   uint8_t multiword_dma_active;
   uint8_t supported_multiword_dma_modes;
-  // rest is reserved,
+  uint8_t reserved6;
+  uint8_t supported_pio_modes;
+  uint16_t min_multiword_dma_transfer_cycle;
+  uint16_t recommended_multiword_dma_transfer_cycle;
+  uint16_t min_pio_transfer_cycle_time_without_flow_control;
+  uint16_t min_pio_transfer_cycle_time_with_iordy;
+  uint16_t reserved7[2];
+  uint16_t identify_packet_reserved[4];
+  uint16_t max_queue_depth; // -1
+  uint16_t sata_reserved[4];
+  uint16_t major_revision_number;
+  uint16_t minor_revision_number;
+  uint16_t command_sets_supported1;
+  uint16_t command_sets_supported2;
+  uint16_t command_sets_supported3;
+  uint16_t command_sets_supported4;
+  uint16_t command_sets_supported5;
+  uint16_t command_sets_supported6;
+  uint16_t ultra_dma_modes;
+  // will finish the rest later
+  
+  
+  
+
 } ide_device_ident_t;
 
 void ide_initialize(uint32_t BAR0, uint32_t BAR1, uint32_t BAR2, uint32_t BAR3, uint32_t BAR4);
@@ -184,6 +207,8 @@ uint8_t ide_atapi_write_sector(uint8_t drive, uint32_t lba, uint8_t numsects, ui
 
 uint8_t ide_ata_read_sector(uint8_t drive, uint32_t lba, uint8_t numsects, uint32_t edi);
 uint8_t ide_ata_write_sector(uint8_t drive, uint32_t lba, uint8_t numsects, uint32_t esi);
+
+uint8_t ide_ata_flush_cache(uint8_t drive);
 
 void wait_for_interrupt();
 
