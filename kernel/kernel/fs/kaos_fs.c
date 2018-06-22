@@ -179,12 +179,20 @@ file_t kaos_open_file(char *file_name, media_device_t *device) {
 
 KAOS_ERR kaos_read_file(const file_t fd, uint8_t *in_data,
                    uint32_t offset, uint32_t length, media_device_t *device) {
-
+  UNUSED(fd);
+  UNUSED(in_data);
+  UNUSED(offset);
+  UNUSED(length);
+  UNUSED(device);
   return KAOS_ERR_NO_ERROR;
 }
 
 KAOS_ERR kaos_write_file(const file_t fd, uint32_t *out_data,
                     uint32_t offset, uint32_t length, media_device_t *device) {
-
+  UNUSED(fd);
+  UNUSED(out_data);
+  UNUSED(offset);
+  UNUSED(length);
+  UNUSED(device);
   return KAOS_ERR_NO_ERROR;
 }

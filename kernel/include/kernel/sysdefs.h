@@ -20,6 +20,11 @@ typedef uint8_t BOOL;
 
 
 
+#ifdef KAOS_DEBUG_MODE
+#define UNUSED(x) (void)(x)
+#else
+#define UNUSED(x)
+#endif
 
 
 

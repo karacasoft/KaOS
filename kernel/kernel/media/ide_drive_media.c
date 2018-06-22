@@ -9,7 +9,6 @@ uint8_t drive_byte_buffer[4096] = {0};
 media_device_t media_ide_devices[4];
 ide_drive_device_info_t ide_device_infos[4];
 
-
 static const char *media_ide_device_name = "IDE device";
 
 void media_ide_print_buffer() {
@@ -34,10 +33,13 @@ KAOS_ERR media_ide_drive_read(media_device_t *dev, size_t address, uint8_t *in_d
 
   size_t sector_count = (len / sector_size) - ((relative_address + len % sector_size) / sector_size) + 2;
   sector_count = (sector_count) ? sector_count : 1;
+
+  printf("Reading %d sectors, from address 0x%x\n", sector_count, address);
+
   while(sector_count > 8) {
     
     if((err = ide_ata_read_sector(drive, address / sector_size, 8, (uint32_t) drive_byte_buffer))) {
-      printf("Read error code : %d", err);
+      printf("Read error code : %d\n", err);
     }
     for(i = 0; i < sector_size * 8; i++) {
       in_data[read_len++] = drive_byte_buffer[relative_address + i];
@@ -49,7 +51,7 @@ KAOS_ERR media_ide_drive_read(media_device_t *dev, size_t address, uint8_t *in_d
   }
   
   if((err = ide_ata_read_sector(drive, address / sector_size, sector_count, (uint32_t) drive_byte_buffer))) {
-    printf("Read error code : %d", err);
+    printf("Read error code : %d\n", err);
   }
   for(i = 0; i < len; i++) {
     in_data[read_len++] = drive_byte_buffer[i];
@@ -72,14 +74,14 @@ KAOS_ERR media_ide_drive_write(media_device_t *dev, size_t address, uint8_t *dat
   // read the sector, write the data on buffer, then write back the sector
   if(address % sector_size) {
     if((err = ide_ata_read_sector(drive, address / sector_size, 1, (uint32_t) drive_byte_buffer))) {
-      printf("Read error code : %d", err);
+      printf("Read error code : %d\n", err);
     }
     relative_address = address % sector_size;
     for(i = 0; i < sector_size - relative_address && i < len; i++) {
       drive_byte_buffer[relative_address + i] = data[i];
     }
     if((err = ide_ata_write_sector(drive, address / sector_size, 1, (uint32_t) drive_byte_buffer))) {
-      printf("Write error code : %d", err);
+      printf("Write error code : %d\n", err);
     }
     start_sector_increment = 1;
     len -= i;
@@ -88,10 +90,13 @@ KAOS_ERR media_ide_drive_write(media_device_t *dev, size_t address, uint8_t *dat
   if(len == 0) return KAOS_ERR_NO_ERROR;
 
   uint32_t sector_count = len / sector_size;
+
+  printf("Writing %d sectors, from address 0x%x, leftover_len=%d\n", sector_count, address, len);
+
   if(sector_count != 0) {
     if((err = ide_ata_write_sector(drive, (address / sector_size) + start_sector_increment,
                                    sector_count, (uint32_t)(data + i)))) {
-      printf("Write error code : %d", err);
+      printf("Write error code : %d\n", err);
     }
   }
 
@@ -99,9 +104,10 @@ KAOS_ERR media_ide_drive_write(media_device_t *dev, size_t address, uint8_t *dat
 
   if(leftover_len) {
     len += i;
+    printf("Reading sector %d\n", (address / sector_size) + start_sector_increment + sector_count);
     if((err = ide_ata_read_sector(drive, (address / sector_size) + start_sector_increment + sector_count,
                                   1, (uint32_t) drive_byte_buffer))) {
-      printf("Read error code : %d", err);
+      printf("Read error code : %d\n", err);
     }
     for(i = 0; i < leftover_len; i++) {
       drive_byte_buffer[i] = data[len - leftover_len + i];
@@ -109,7 +115,7 @@ KAOS_ERR media_ide_drive_write(media_device_t *dev, size_t address, uint8_t *dat
 
     if((err = ide_ata_write_sector(drive, (address / sector_size) + start_sector_increment + sector_count,
                                    1, (uint32_t) drive_byte_buffer))) {
-      printf("Write error code : %d", err);
+      printf("Write error code : %d\n", err);
     }
   }
 
@@ -121,7 +127,7 @@ KAOS_ERR media_ide_drive_write(media_device_t *dev, size_t address, uint8_t *dat
 
 media_device_t *media_ide_get_device(uint8_t drive) {
   if(ide_devices[drive].reserved) {
-    media_ide_devices[drive].name = media_ide_devices;
+    media_ide_devices[drive].name = media_ide_device_name;
     media_ide_devices[drive].read = media_ide_drive_read;
     media_ide_devices[drive].write = media_ide_drive_write;
     media_ide_devices[drive].get_total_medium_size = media_ide_get_total_medium_size;

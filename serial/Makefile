@@ -7,7 +7,7 @@ CFLAGS ?= -O2 -g
 DESTDIR ?=
 PREFIX ?= /usr/local
 EXEC_PREFIX ?= $(PREFIX)
-BOOTDIR ?= $(EXEC_PREFIX)/boot
+LIBDIR ?= $(EXEC_PREFIX)/lib
 INCLUDEDIR ?= $(PREFIX)/include
 
 CFLAGS := $(CFLAGS) -ffreestanding -Wall -Wextra
@@ -19,14 +19,52 @@ ARCHDIR = arch/$(HOSTARCH)
 
 include $(ARCHDIR)/make.config
 
-CFLAGS := $(CFLAGS) $(KERNEL_ARCH_CFLAGS)
-CPPFLAGS := $(CPPFLAGS) $(KERNEL_ARCH_CPPFLAGS)
-LDFLAGS := $(LDFLAGS) $(KERNEL_ARCH_LDFLAGS)
-LIBS := $(LIBS) $(KERNEL_ARCH_LIBS)
+CFLAGS := $(CFLAGS) $(ARCH_CFLAGS)
+CPPFLAGS := $(CPPFLAGS) $(ARCH_CPPFLAGS)
+LDFLAGS := $(LDFLAGS) $(ARCH_LDFLAGS)
+LIBS := $(LIBS) $(ARCH_LIBS)
 
+FREEOBJS = \
+	$(ARCH_FREEOBJS) \
+	serial.o \
 
+HOSTEDOBJS = \
+	$(ARCH_HOSTEDOBJS) \
+
+OBJS = \
+	$(FREEOBJS) \
+	$(HOSTEDOBJS) \
+
+BINARIES = serial.a
+
+.PHONY: all clean install install-headers install-libs
+.SUFFIXES: .o .c .S
+
+all: $(BINARIES)
+
+clean:
+	rm -f $(BINARIES) *.a
+	rm -f $(OBJS) *.o */*.o */*/*.o
+	rm -f $(OBJS:.o=.d) *.d */*.d */*/*.d
+
+serial.a: $(OBJS)
+	$(AR) rcs $@ $(OBJS)
+
+.c.o:
+	$(CC) -MD -c $< -o $@ -std=gnu11 $(CFLAGS) $(CPPFLAGS)
+
+.c.S:
+	$(CC) -MD -c $< -o $@ $(CFLAGS) $(CPPFLAGS)
+
+install: install-headers install-libs
 
 install-headers:
 	mkdir -p $(DESTDIR)$(INCLUDEDIR)
 	cp -R include/. $(DESTDIR)$(INCLUDEDIR)/.
 
+install-libs:
+	mkdir -p $(DESTDIR)$(LIBDIR)
+	cp -R $(BINARIES) $(DESTDIR)$(LIBDIR)
+
+-include $(OBJS:.o=.d)
+-include $(LIBK_OBJS:.o=.d)

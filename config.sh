@@ -1,4 +1,4 @@
-SYSTEM_HEADER_PROJECTS="libc kernel"
+SYSTEM_HEADER_PROJECTS="libc kernel serial"
 PROJECTS="libc kernel"
 
 #Append cross compiler binary path to PATH variable
@@ -19,7 +19,7 @@ export BOOTDIR=/boot
 export LIBDIR=$EXEC_PREFIX/lib
 export INCLUDEDIR=$PREFIX/include
 
-export CFLAGS='-O2 -g'
+export CFLAGS='-O2 -g -DKAOS_DEBUG_MODE'
 export CPPFLAGS=''
 
 export SYSROOT="$(pwd)/sysroot"
